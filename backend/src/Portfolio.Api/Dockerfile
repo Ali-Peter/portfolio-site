@@ -10,21 +10,21 @@
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
-# Restore first (better layer caching): copy solution + project files only.
+# Restore first (better layer caching): copy shared props + Api project graph only.
+# Production images restore/publish Portfolio.Api alone — never the full
+# solution (tests are not copied into the build context).
 COPY global.json ./
-COPY backend/Portfolio.sln ./backend/
 COPY backend/Directory.Build.props ./backend/
 COPY backend/NuGet.config ./backend/
 COPY backend/src/Portfolio.Api/Portfolio.Api.csproj ./backend/src/Portfolio.Api/
 COPY backend/src/Portfolio.Application/Portfolio.Application.csproj ./backend/src/Portfolio.Application/
 COPY backend/src/Portfolio.Domain/Portfolio.Domain.csproj ./backend/src/Portfolio.Domain/
 COPY backend/src/Portfolio.Infrastructure/Portfolio.Infrastructure.csproj ./backend/src/Portfolio.Infrastructure/
-RUN dotnet restore backend/Portfolio.sln
+RUN dotnet restore backend/src/Portfolio.Api/Portfolio.Api.csproj
 
 # Full source + publish (Release, single framework, no app host bloat).
 COPY backend/ ./backend/
-WORKDIR /src/backend
-RUN dotnet publish src/Portfolio.Api/Portfolio.Api.csproj \
+RUN dotnet publish backend/src/Portfolio.Api/Portfolio.Api.csproj \
     -c Release -o /app/publish --no-restore \
     -p:GenerateDocumentationFile=false
 
