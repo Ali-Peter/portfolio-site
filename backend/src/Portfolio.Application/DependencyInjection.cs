@@ -30,11 +30,19 @@ public static class DependencyInjection
         services.AddScoped<IValidator<CreateContactMessageRequest>, CreateContactMessageRequestValidator>();
         services.AddScoped<IValidator<CreateChatRequest>, CreateChatRequestValidator>();
 
+        // Admin CMS (v1): login + content validators.
+        services.AddScoped<IValidator<AdminLoginRequest>, AdminLoginRequestValidator>();
+        services.AddScoped<IValidator<UpsertProjectRequest>, UpsertProjectRequestValidator>();
+        services.AddScoped<IValidator<UpsertBlogPostRequest>, UpsertBlogPostRequestValidator>();
+        services.AddScoped<IValidator<UpsertSkillRequest>, UpsertSkillRequestValidator>();
+        services.AddScoped<IValidator<UpsertExperienceRequest>, UpsertExperienceRequestValidator>();
+
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IBlogService, BlogService>();
         services.AddScoped<ISkillService, SkillService>();
         services.AddScoped<IExperienceService, ExperienceService>();
         services.AddScoped<IContactService, ContactService>();
+        services.AddScoped<IAdminContentService, AdminContentService>();
 
         // RAG assistant. IEmbeddingService / IChatCompletionService are
         // implemented in Infrastructure and registered there; AiAssistantOptions

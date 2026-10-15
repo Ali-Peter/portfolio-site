@@ -8,3 +8,26 @@ export interface ProblemDetails {
   traceId?: string;
   errors?: Record<string, string[]>;
 }
+
+/**
+ * Flatten FluentValidation 422 payloads (`errors: { Field: ["msg"] }`) into a
+ * `{ Field: "msg" }` map for form field display. Returns an empty object for
+ * responses without field errors.
+ */
+export function toFieldErrors(body: unknown): Record<string, string> {
+  if (typeof body !== 'object' || body === null) {
+    return {};
+  }
+  const errors = (body as ProblemDetails).errors;
+  if (typeof errors !== 'object' || errors === null) {
+    return {};
+  }
+  const fieldErrors: Record<string, string> = {};
+  for (const [field, messages] of Object.entries(errors)) {
+    const first = Array.isArray(messages) ? messages[0] : undefined;
+    if (first) {
+      fieldErrors[field] = first;
+    }
+  }
+  return fieldErrors;
+}

@@ -1,0 +1,116 @@
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <p class="kicker mb-1">Admin</p>
+    <h1 class="text-2xl font-semibold text-white">Blog</h1>
+    <p class="mt-1 text-sm text-neutral-500">
+      @if (loading()) { Loading… } @else { {{ items().length }} total }
+    </p>
+  </div>
+  <button type="button" (click)="openCreate()" class="btn btn-primary">New post</button>
+</div>
+
+@if (editing()) {
+  <form [formGroup]="form" (ngSubmit)="save()" class="card mt-6 space-y-5 p-6" novalidate>
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-white">
+        {{ editing() === 'new' ? 'New post' : 'Edit post' }}
+      </h2>
+      <button type="button" (click)="close()" class="text-sm text-neutral-400 hover:text-white">Cancel</button>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-slug">Slug</label>
+        <input id="b-slug" formControlName="slug" class="input" placeholder="my-article" />
+        @if (fieldError('Slug')) { <p class="field-error">{{ fieldError('Slug') }}</p> }
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-title">Title</label>
+        <input id="b-title" formControlName="title" class="input" placeholder="Article title" />
+        @if (fieldError('Title')) { <p class="field-error">{{ fieldError('Title') }}</p> }
+      </div>
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-excerpt">Excerpt</label>
+      <input id="b-excerpt" formControlName="excerpt" class="input" placeholder="Short teaser shown in listings" />
+      @if (fieldError('Excerpt')) { <p class="field-error">{{ fieldError('Excerpt') }}</p> }
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-body">Body (markdown)</label>
+      <textarea id="b-body" formControlName="bodyMarkdown" rows="12" class="input resize-y" placeholder="## Heading&#10;&#10;Write the post…"></textarea>
+      @if (fieldError('BodyMarkdown')) { <p class="field-error">{{ fieldError('BodyMarkdown') }}</p> }
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-3">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-cover">Cover image URL</label>
+        <input id="b-cover" formControlName="coverImageUrl" class="input" placeholder="https://…" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-published">Published at</label>
+        <input id="b-published" type="datetime-local" formControlName="publishedAt" class="input" />
+        @if (fieldError('PublishedAt')) { <p class="field-error">{{ fieldError('PublishedAt') }}</p> }
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-reading">Reading minutes</label>
+        <input id="b-reading" type="number" min="1" formControlName="readingMinutes" class="input" />
+        @if (fieldError('ReadingMinutes')) { <p class="field-error">{{ fieldError('ReadingMinutes') }}</p> }
+      </div>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="b-tags">Tags (comma-separated)</label>
+        <input id="b-tags" formControlName="tags" class="input" placeholder="angular, dotnet, ai" />
+      </div>
+      <label class="flex items-center gap-2 pb-2.5 text-sm text-neutral-300">
+        <input type="checkbox" formControlName="isPublished" class="h-4 w-4 accent-amber-400" />
+        Published (visible on site)
+      </label>
+    </div>
+
+    <button type="submit" [disabled]="saving()" class="btn btn-primary">
+      {{ saving() ? 'Saving…' : editing() === 'new' ? 'Create post' : 'Save changes' }}
+    </button>
+  </form>
+}
+
+<div class="card mt-6 overflow-hidden">
+  @if (loading()) {
+    <div class="space-y-3 p-5">
+      <div class="skeleton h-14"></div>
+      <div class="skeleton h-14"></div>
+      <div class="skeleton h-14"></div>
+    </div>
+  } @else if (items().length === 0) {
+    <p class="p-8 text-center text-sm text-neutral-500">No posts yet — write your first one.</p>
+  } @else {
+    <ul class="divide-y divide-neutral-800">
+      @for (post of items(); track post.id) {
+        <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <div class="min-w-0">
+            <p class="truncate font-medium text-white">
+              {{ post.title }}
+              @if (post.isPublished) {
+                <span class="chip chip-accent ml-2 align-middle">Published</span>
+              } @else {
+                <span class="chip ml-2 align-middle">Draft</span>
+              }
+            </p>
+            <p class="mt-0.5 truncate text-xs text-neutral-500">
+              /{{ post.slug }} · {{ post.readingMinutes }} min read · {{ post.viewCount }} views
+            </p>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <button type="button" (click)="openEdit(post)" class="btn btn-outline py-1.5">Edit</button>
+            <button type="button" (click)="remove(post)" class="btn btn-outline border-red-900/70 py-1.5 text-red-400 hover:border-red-700 hover:text-red-300">
+              Delete
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

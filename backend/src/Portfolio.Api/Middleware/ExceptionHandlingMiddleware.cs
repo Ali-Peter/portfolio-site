@@ -9,6 +9,7 @@ namespace Portfolio.Api.Middleware;
 /// - <see cref="NotFoundException"/> → 404
 /// - <see cref="PortfolioValidationException"/> / FluentValidation
 ///   <see cref="ValidationException"/> → 422 with an <c>errors</c> extension
+/// - <see cref="UnauthorizedException"/> → 401 (generic message, no hints)
 /// - everything else → 500 with no internal details leaked.
 /// The middleware also stamps the <c>traceId</c> extension; the global
 /// <c>UseExceptionHandler</c> problem-details writer below it handles framework
@@ -65,6 +66,10 @@ public sealed class ExceptionHandlingMiddleware
                 StatusCodes.Status422UnprocessableEntity,
                 "Validation failed",
                 validation.Errors),
+            UnauthorizedException unauthorized => (
+                StatusCodes.Status401Unauthorized,
+                "Unauthorized",
+                (IReadOnlyDictionary<string, string[]>?)null),
             ValidationException fluent => (
                 StatusCodes.Status422UnprocessableEntity,
                 "Validation failed",

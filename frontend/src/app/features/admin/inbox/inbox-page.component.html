@@ -1,0 +1,93 @@
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <p class="kicker mb-1">Admin</p>
+    <h1 class="text-2xl font-semibold text-white">Contact inbox</h1>
+    <p class="mt-1 text-sm text-neutral-500">
+      @if (loading()) { Loading… } @else { {{ totalCount() }} messages }
+    </p>
+  </div>
+  <div class="flex items-center gap-1 rounded-lg border border-neutral-800 bg-neutral-900/60 p-1">
+    @for (option of ['all', 'unhandled', 'handled']; track option) {
+      <button
+        type="button"
+        (click)="setFilter($any(option))"
+        class="rounded-md px-3 py-1.5 text-xs font-medium capitalize transition"
+        [class.bg-amber-500/15]="filter() === option"
+        [class.text-amber-300]="filter() === option"
+        [class.text-neutral-400]="filter() !== option"
+      >
+        {{ option }}
+      </button>
+    }
+  </div>
+</div>
+
+<div class="card mt-6 overflow-hidden">
+  @if (loading()) {
+    <div class="space-y-3 p-5">
+      <div class="skeleton h-20"></div>
+      <div class="skeleton h-20"></div>
+      <div class="skeleton h-20"></div>
+    </div>
+  } @else if (items().length === 0) {
+    <p class="p-8 text-center text-sm text-neutral-500">No messages in this view.</p>
+  } @else {
+    <ul class="divide-y divide-neutral-800">
+      @for (message of items(); track trackById($index, message)) {
+        <li class="px-5 py-4">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0">
+              <p class="font-medium text-white">
+                {{ message.name }}
+                @if (message.isHandled) {
+                  <span class="chip chip-accent ml-2 align-middle">Handled</span>
+                } @else {
+                  <span class="chip ml-2 align-middle">New</span>
+                }
+              </p>
+              <p class="mt-0.5 text-xs text-neutral-500">
+                <a [href]="'mailto:' + message.email" class="transition hover:text-amber-300">
+                  {{ message.email }}
+                </a>
+                · {{ message.createdAtUtc | date: 'medium' }}
+              </p>
+            </div>
+            <div class="flex shrink-0 items-center gap-2">
+              <button type="button" (click)="toggleHandled(message)" class="btn btn-outline py-1.5">
+                {{ message.isHandled ? 'Mark unhandled' : 'Mark handled' }}
+              </button>
+              <button type="button" (click)="remove(message)" class="btn btn-outline border-red-900/70 py-1.5 text-red-400 hover:border-red-700 hover:text-red-300">
+                Delete
+              </button>
+            </div>
+          </div>
+          <p class="mt-3 whitespace-pre-wrap rounded-lg bg-neutral-950/60 px-3.5 py-3 text-sm leading-relaxed text-neutral-300">
+            {{ message.message }}
+          </p>
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+@if (totalPages() > 1) {
+  <div class="mt-4 flex items-center justify-between">
+    <button
+      type="button"
+      (click)="goToPage(page() - 1)"
+      [disabled]="page() <= 1"
+      class="btn btn-outline py-1.5"
+    >
+      ← Previous
+    </button>
+    <span class="text-xs text-neutral-500">Page {{ page() }} of {{ totalPages() }}</span>
+    <button
+      type="button"
+      (click)="goToPage(page() + 1)"
+      [disabled]="page() >= totalPages()"
+      class="btn btn-outline py-1.5"
+    >
+      Next →
+    </button>
+  </div>
+}

@@ -1,0 +1,85 @@
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <p class="kicker mb-1">Admin</p>
+    <h1 class="text-2xl font-semibold text-white">Skills</h1>
+    <p class="mt-1 text-sm text-neutral-500">
+      @if (loading()) { Loading… } @else { {{ items().length }} total }
+    </p>
+  </div>
+  <button type="button" (click)="openCreate()" class="btn btn-primary">New skill</button>
+</div>
+
+@if (editing()) {
+  <form [formGroup]="form" (ngSubmit)="save()" class="card mt-6 space-y-5 p-6" novalidate>
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-white">
+        {{ editing() === 'new' ? 'New skill' : 'Edit skill' }}
+      </h2>
+      <button type="button" (click)="close()" class="text-sm text-neutral-400 hover:text-white">Cancel</button>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div class="sm:col-span-2">
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="s-name">Name</label>
+        <input id="s-name" formControlName="name" class="input" placeholder="ASP.NET Core" />
+        @if (fieldError('Name')) { <p class="field-error">{{ fieldError('Name') }}</p> }
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="s-category">Category</label>
+        <select id="s-category" formControlName="category" class="input">
+          @for (category of categories; track category) {
+            <option [value]="category">{{ category }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="s-proficiency">Proficiency</label>
+        <select id="s-proficiency" formControlName="proficiency" class="input">
+          @for (level of proficiencies; track level) {
+            <option [value]="level">{{ level }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="s-sort">Sort order</label>
+        <input id="s-sort" type="number" min="0" formControlName="sortOrder" class="input" />
+        @if (fieldError('SortOrder')) { <p class="field-error">{{ fieldError('SortOrder') }}</p> }
+      </div>
+    </div>
+
+    <button type="submit" [disabled]="saving()" class="btn btn-primary">
+      {{ saving() ? 'Saving…' : editing() === 'new' ? 'Create skill' : 'Save changes' }}
+    </button>
+  </form>
+}
+
+<div class="card mt-6 overflow-hidden">
+  @if (loading()) {
+    <div class="space-y-3 p-5">
+      <div class="skeleton h-12"></div>
+      <div class="skeleton h-12"></div>
+      <div class="skeleton h-12"></div>
+    </div>
+  } @else if (items().length === 0) {
+    <p class="p-8 text-center text-sm text-neutral-500">No skills yet — add your first one.</p>
+  } @else {
+    <ul class="divide-y divide-neutral-800">
+      @for (skill of items(); track skill.id) {
+        <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-3.5">
+          <div class="min-w-0">
+            <p class="truncate font-medium text-white">{{ skill.name }}</p>
+            <p class="mt-0.5 text-xs text-neutral-500">
+              {{ skill.category }} · {{ skill.proficiency }} · sort {{ skill.sortOrder }}
+            </p>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <button type="button" (click)="openEdit(skill)" class="btn btn-outline py-1.5">Edit</button>
+            <button type="button" (click)="remove(skill)" class="btn btn-outline border-red-900/70 py-1.5 text-red-400 hover:border-red-700 hover:text-red-300">
+              Delete
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

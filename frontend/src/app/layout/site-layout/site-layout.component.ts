@@ -1,6 +1,5 @@
 import { Component, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { ToastHostComponent } from '@shared/ui/toast-host/toast-host.component';
 
 interface NavLink {
   path: string;
@@ -15,7 +14,7 @@ interface SocialLink {
 @Component({
   selector: 'app-site-layout',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, ToastHostComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet],
   templateUrl: './site-layout.component.html',
 })
 export class SiteLayoutComponent {

@@ -17,10 +17,12 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render the site navigation', () => {
+  it('should render the root shell', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('nav')?.textContent).toContain('Projects');
+    // The shell is now just the app-root toast host + routed outlet; the site
+    // navigation lives in the lazily-loaded SiteLayoutComponent route.
+    expect(compiled.querySelector('router-outlet')).toBeTruthy();
   });
 });

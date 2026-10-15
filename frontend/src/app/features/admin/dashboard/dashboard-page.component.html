@@ -1,0 +1,45 @@
+<p class="kicker mb-1">Admin</p>
+<h1 class="text-2xl font-semibold text-white">Dashboard</h1>
+<p class="mt-1 text-sm text-neutral-500">Manage portfolio content and the contact inbox.</p>
+
+<div class="mt-6 grid gap-4 sm:grid-cols-3">
+  <a routerLink="/admin/projects" class="card card-hover block p-5">
+    <p class="text-sm text-neutral-400">Projects</p>
+    <p class="mt-2 font-display text-3xl font-semibold text-white">
+      @if (loading()) { — } @else { {{ projectCount() ?? 0 }} }
+    </p>
+  </a>
+  <a routerLink="/admin/blog" class="card card-hover block p-5">
+    <p class="text-sm text-neutral-400">Blog posts</p>
+    <p class="mt-2 font-display text-3xl font-semibold text-white">
+      @if (loading()) { — } @else { {{ postCount() ?? 0 }} }
+    </p>
+  </a>
+  <a routerLink="/admin/inbox" class="card card-hover block p-5">
+    <p class="text-sm text-neutral-400">Inbox messages</p>
+    <p class="mt-2 font-display text-3xl font-semibold text-white">
+      @if (loading()) { — } @else { {{ inboxCount() ?? 0 }} }
+    </p>
+  </a>
+</div>
+
+<div class="card mt-6 p-5">
+  <p class="kicker mb-2">Maintenance</p>
+  <p class="max-w-xl text-sm leading-relaxed text-neutral-400">
+    Content edits queue a background reindex automatically. Use a manual rebuild if the
+    search index was rebuilt outside the app (e.g. after a database restore).
+  </p>
+  <div class="mt-4 flex flex-wrap items-center gap-3">
+    <button
+      type="button"
+      (click)="reindex()"
+      [disabled]="reindexing()"
+      class="btn btn-outline"
+    >
+      {{ reindexing() ? 'Reindexing…' : 'Rebuild search index' }}
+    </button>
+    @if (lastReindexed()) {
+      <span class="text-xs text-neutral-500">Last manual reindex: {{ lastReindexed() }}</span>
+    }
+  </div>
+</div>

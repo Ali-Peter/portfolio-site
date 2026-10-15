@@ -74,5 +74,4 @@ export const siteRoutes: Routes = [
       ),
     title: 'Ask AI — Ali Ogochukwu Peter',
   },
-  { path: '**', redirectTo: '' },
 ];

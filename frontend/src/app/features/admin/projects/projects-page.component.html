@@ -1,0 +1,138 @@
+<div class="flex flex-wrap items-center justify-between gap-4">
+  <div>
+    <p class="kicker mb-1">Admin</p>
+    <h1 class="text-2xl font-semibold text-white">Projects</h1>
+    <p class="mt-1 text-sm text-neutral-500">
+      @if (loading()) { Loading… } @else { {{ items().length }} total }
+    </p>
+  </div>
+  <button type="button" (click)="openCreate()" class="btn btn-primary">New project</button>
+</div>
+
+@if (editing()) {
+  <form [formGroup]="form" (ngSubmit)="save()" class="card mt-6 space-y-5 p-6" novalidate>
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-semibold text-white">
+        {{ editing() === 'new' ? 'New project' : 'Edit project' }}
+      </h2>
+      <button type="button" (click)="close()" class="text-sm text-neutral-400 hover:text-white">Cancel</button>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-2">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-slug">Slug</label>
+        <input id="p-slug" formControlName="slug" class="input" placeholder="my-project" />
+        @if (fieldError('Slug')) { <p class="field-error">{{ fieldError('Slug') }}</p> }
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-title">Title</label>
+        <input id="p-title" formControlName="title" class="input" placeholder="Project title" />
+        @if (fieldError('Title')) { <p class="field-error">{{ fieldError('Title') }}</p> }
+      </div>
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-summary">Summary</label>
+      <input id="p-summary" formControlName="summary" class="input" placeholder="One-line summary shown on cards" />
+      @if (fieldError('Summary')) { <p class="field-error">{{ fieldError('Summary') }}</p> }
+    </div>
+
+    <div>
+      <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-description">Description (markdown)</label>
+      <textarea id="p-description" formControlName="description" rows="8" class="input resize-y" placeholder="Full write-up"></textarea>
+      @if (fieldError('Description')) { <p class="field-error">{{ fieldError('Description') }}</p> }
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-3">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-repo">Repo URL</label>
+        <input id="p-repo" formControlName="repoUrl" class="input" placeholder="https://github.com/…" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-demo">Demo URL</label>
+        <input id="p-demo" formControlName="demoUrl" class="input" placeholder="https://…" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-cover">Cover image URL</label>
+        <input id="p-cover" formControlName="coverImageUrl" class="input" placeholder="https://…" />
+      </div>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-4">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-status">Status</label>
+        <select id="p-status" formControlName="status" class="input">
+          @for (status of statuses; track status) {
+            <option [value]="status">{{ statusLabels[status] }}</option>
+          }
+        </select>
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-start">Started</label>
+        <input id="p-start" type="date" formControlName="startedOn" class="input" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-end">Completed</label>
+        <input id="p-end" type="date" formControlName="completedOn" class="input" />
+      </div>
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-sort">Sort order</label>
+        <input id="p-sort" type="number" min="0" formControlName="sortOrder" class="input" />
+        @if (fieldError('SortOrder')) { <p class="field-error">{{ fieldError('SortOrder') }}</p> }
+      </div>
+    </div>
+
+    <div class="grid gap-5 sm:grid-cols-[1fr_auto] sm:items-end">
+      <div>
+        <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="p-tech">Technologies (comma-separated)</label>
+        <input id="p-tech" formControlName="technologies" class="input" placeholder="C#, Angular, PostgreSQL" />
+      </div>
+      <label class="flex items-center gap-2 pb-2.5 text-sm text-neutral-300">
+        <input type="checkbox" formControlName="featured" class="h-4 w-4 accent-amber-400" />
+        Featured on home page
+      </label>
+    </div>
+
+    <button type="submit" [disabled]="saving()" class="btn btn-primary">
+      {{ saving() ? 'Saving…' : editing() === 'new' ? 'Create project' : 'Save changes' }}
+    </button>
+  </form>
+}
+
+<div class="card mt-6 overflow-hidden">
+  @if (loading()) {
+    <div class="space-y-3 p-5">
+      <div class="skeleton h-14"></div>
+      <div class="skeleton h-14"></div>
+      <div class="skeleton h-14"></div>
+    </div>
+  } @else if (items().length === 0) {
+    <p class="p-8 text-center text-sm text-neutral-500">
+      No projects yet — use “New project” to add one.
+    </p>
+  } @else {
+    <ul class="divide-y divide-neutral-800">
+      @for (project of items(); track project.id) {
+        <li class="flex flex-wrap items-center justify-between gap-3 px-5 py-4">
+          <div class="min-w-0">
+            <p class="truncate font-medium text-white">
+              {{ project.title }}
+              @if (project.featured) {
+                <span class="chip chip-accent ml-2 align-middle">Featured</span>
+              }
+            </p>
+            <p class="mt-0.5 truncate text-xs text-neutral-500">
+              /{{ project.slug }} · {{ statusLabels[project.status] }} · {{ project.technologies.length }} tech
+            </p>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <button type="button" (click)="openEdit(project)" class="btn btn-outline py-1.5">Edit</button>
+            <button type="button" (click)="remove(project)" class="btn btn-outline border-red-900/70 py-1.5 text-red-400 hover:border-red-700 hover:text-red-300">
+              Delete
+            </button>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</div>

@@ -6,6 +6,9 @@ export const serverRoutes: ServerRoute[] = [
   { path: 'blog', renderMode: RenderMode.Prerender },
   { path: 'contact', renderMode: RenderMode.Prerender },
   { path: 'ai-assistant', renderMode: RenderMode.Prerender },
+  // Admin pages depend on per-request auth state (localStorage token) and live
+  // data, so they always render on demand — never prerendered.
+  { path: 'admin/**', renderMode: RenderMode.Server },
   // Slug detail pages and unknown URLs render on demand: their data comes
   // from the API at request time (Phase 4), so prerendering cannot enumerate them.
   { path: '**', renderMode: RenderMode.Server },

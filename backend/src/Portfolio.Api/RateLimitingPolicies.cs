@@ -12,4 +12,7 @@ public static class RateLimitingPolicies
     public const string Contact = "contact";
 
     public const string Ai = "ai";
+
+    /// <summary>Admin login: strict per-IP policy against credential stuffing.</summary>
+    public const string AdminAuth = "admin-auth";
 }

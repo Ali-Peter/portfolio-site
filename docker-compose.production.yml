@@ -43,6 +43,15 @@ services:
       Ai__OpenAi__ApiKey: ${Ai__OpenAi__ApiKey:-}
       Database__MigrateOnStartup: ${Database__MigrateOnStartup:-false}
       Database__SeedOnStartup: ${Database__SeedOnStartup:-false}
+      # Admin CMS (see docs/ADMIN.md). Jwt__Key is required — the API
+      # fail-fast-exits at startup without a >=32 char signing key.
+      Jwt__Key: ${Jwt__Key:?Set Jwt__Key in .env.production}
+      Jwt__Issuer: ${Jwt__Issuer:-portfolio-api}
+      Jwt__Audience: ${Jwt__Audience:-portfolio-admin}
+      Jwt__ExpiryMinutes: ${Jwt__ExpiryMinutes:-720}
+      Admin__Email: ${Admin__Email:-}
+      Admin__PasswordHash: ${Admin__PasswordHash:-}
+      Admin__Password: ${Admin__Password:-}
     ports:
       - "${API_HOST_PORT:-8080}:8080"
     networks:

@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
-import { SiteLayoutComponent } from './layout/site-layout/site-layout.component';
+import { RouterOutlet } from '@angular/router';
+import { ToastHostComponent } from '@shared/ui/toast-host/toast-host.component';
 
 @Component({
   selector: 'app-root',
-  imports: [SiteLayoutComponent],
+  imports: [RouterOutlet, ToastHostComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

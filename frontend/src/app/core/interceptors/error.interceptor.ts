@@ -25,7 +25,11 @@ export function errorInterceptor(
   return next(req).pipe(
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse) {
-        if (error.status !== 422 || !hasFieldErrors(error.error)) {
+        // Admin 401s are silent: expired sessions redirect via authInterceptor
+        // and the login form renders its own invalid-credentials message.
+        const isAdminAuthError =
+          error.status === 401 && req.url.includes('/api/v1/admin/');
+        if (error.status !== 422 && !isAdminAuthError && !hasFieldErrors(error.error)) {
           toast.error(friendlyMessage(error));
         }
       }

@@ -1,0 +1,66 @@
+<div class="flex min-h-screen items-center justify-center bg-neutral-950 px-4 py-12 text-neutral-200">
+  <div class="w-full max-w-sm">
+    <a routerLink="/" class="mb-8 flex items-center justify-center gap-2.5">
+      <span class="flex h-9 w-9 items-center justify-center rounded-lg bg-amber-400 font-display text-sm font-bold text-neutral-950">AP</span>
+      <span class="font-display text-base font-semibold tracking-tight text-white">
+        Ali Ogochukwu <span class="text-amber-400">Peter</span>
+      </span>
+    </a>
+
+    <div class="card p-6 sm:p-8">
+      <p class="kicker mb-1">Admin</p>
+      <h1 class="text-xl font-semibold text-white">Sign in</h1>
+      <p class="mt-1.5 text-sm text-neutral-500">Content management for this portfolio.</p>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="mt-6 space-y-4" novalidate>
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="admin-email">
+            Email
+          </label>
+          <input
+            id="admin-email"
+            type="email"
+            formControlName="email"
+            autocomplete="username"
+            class="input"
+            placeholder="you@example.com"
+          />
+          @if (form.controls.email.touched && form.controls.email.invalid) {
+            <p class="field-error">Enter a valid email address.</p>
+          }
+        </div>
+
+        <div>
+          <label class="mb-1.5 block text-sm font-medium text-neutral-300" for="admin-password">
+            Password
+          </label>
+          <input
+            id="admin-password"
+            type="password"
+            formControlName="password"
+            autocomplete="current-password"
+            class="input"
+            placeholder="Your password"
+          />
+          @if (form.controls.password.touched && form.controls.password.invalid) {
+            <p class="field-error">Password is required.</p>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <p class="rounded-lg border border-red-900/60 bg-red-950/40 px-3 py-2.5 text-sm text-red-300">
+            {{ errorMessage() }}
+          </p>
+        }
+
+        <button type="submit" [disabled]="submitting()" class="btn btn-primary w-full py-3">
+          {{ submitting() ? 'Signing in…' : 'Sign in' }}
+        </button>
+      </form>
+    </div>
+
+    <p class="mt-6 text-center text-xs text-neutral-600">
+      <a routerLink="/" class="transition hover:text-neutral-400">← Back to site</a>
+    </p>
+  </div>
+</div>

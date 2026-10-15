@@ -1,7 +1,8 @@
-# Production deployment — public portfolio site (no Admin CMS)
+# Production deployment — public portfolio site + Admin CMS
 
-Goal: public site live end-to-end (API + Angular SSR + Postgres/pgvector + RAG chatbot).
-Admin CMS is explicitly out of scope for this deploy.
+Goal: public site live end-to-end (API + Angular SSR + Postgres/pgvector + RAG
+chatbot) plus the `/admin` CMS. Admin-specific setup (JWT key, admin
+credentials, hash generation) is documented in `docs/ADMIN.md`.
 
 ## 1. Production configuration (env vars only — zero secrets in the repo)
 
@@ -22,6 +23,11 @@ is committed — the host's env vars are the production config.
 | `Ai__TopK` / `Ai__MaxQuestionChars` / `Ai__MaxContextChars` | no | `6` / `2000` / `9000` |
 | `Database__MigrateOnStartup` | simple hosts | `true` = run EF migrations at boot (Render/Fly/compose). Prefer CI `dotnet ef` for fleets |
 | `Database__SeedOnStartup` | first deploy | `true` = run idempotent seeder (skips when data exists). `false` once Admin CMS owns content |
+| `Jwt__Key` | yes (admin) | JWT signing key, ≥ 32 chars (`openssl rand -base64 48`). API **exits at startup** without it |
+| `Jwt__Issuer` / `Jwt__Audience` | no | defaults `portfolio-api` / `portfolio-admin` |
+| `Jwt__ExpiryMinutes` | no | default `720` (12 h) |
+| `Admin__Email` | yes (admin) | admin login identity (startup warning when empty) |
+| `Admin__PasswordHash` | yes (prod) | PBKDF2 `v1.…` hash — generate with `dotnet run -- --hash-password '…'` (see `docs/ADMIN.md`) |
 
 CORS origins must be exact `https` URLs with no trailing slash. Add `__1`,
 `__2`… for apex + www + preview URLs.

@@ -5,11 +5,23 @@ using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Portfolio.Api;
 using Portfolio.Api.Middleware;
+using Portfolio.Api.Security;
 using Portfolio.Application;
 using Portfolio.Application.Common;
 using Portfolio.Application.Services;
 using Portfolio.Infrastructure;
 using Portfolio.Infrastructure.Health;
+
+// Admin credential helper: prints the PBKDF2 hash for the `Admin:PasswordHash`
+// setting (see docs/ADMIN.md).
+//   dotnet run --project src/Portfolio.Api -- --hash-password 'your-password'
+// Note: CLI args can leak via shell history / process listings — use a trusted
+// machine and prefer interactive entry for production credentials.
+if (args is ["--hash-password", { } password])
+{
+    Console.WriteLine(AdminPasswordHasher.Hash(password));
+    return;
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -185,12 +197,92 @@ builder.Services.AddRateLimiter(options =>
                 Window = TimeSpan.FromSeconds(aiWindow),
                 QueueLimit = 0,
             }));
+
+    // Admin login: strict per-IP policy against credential stuffing.
+    options.AddPolicy(
+        RateLimitingPolicies.AdminAuth,
+        context => RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "anonymous",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 10,
+                Window = TimeSpan.FromSeconds(60),
+                QueueLimit = 0,
+            }));
 });
 
 // Health: /health is liveness (always 200 when the process runs);
 // /health/ready includes the PostgreSQL reachability check.
 builder.Services.AddHealthChecks()
     .AddCheck<PostgresHealthCheck>("postgres");
+
+// Admin CMS (v1): single-admin JWT auth. Credentials and the signing key come
+// from configuration only (user-secrets locally, env vars in production) —
+// never the repository. A missing/short key fails fast at startup rather than
+// silently issuing weak tokens.
+builder.Services.Configure<AdminOptions>(builder.Configuration.GetSection(AdminOptions.SectionName));
+builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptions.SectionName));
+builder.Services.AddScoped<IAdminAuthService, AdminAuthService>();
+
+var jwtKey = builder.Configuration.GetValue<string>("Jwt:Key") ?? string.Empty;
+if (jwtKey.Length < 32)
+{
+    throw new InvalidOperationException(
+        "JWT signing key is not configured. Set it via user-secrets (Jwt:Key, min 32 chars) " +
+        "locally or the Jwt__Key environment variable in production.");
+}
+
+builder.Services
+    .AddAuthentication(Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration.GetValue("Jwt:Issuer", "portfolio-api"),
+            ValidAudience = builder.Configuration.GetValue("Jwt:Audience", "portfolio-admin"),
+            IssuerSigningKey = new Microsoft.IdentityModel.Tokens.SymmetricSecurityKey(
+                System.Text.Encoding.UTF8.GetBytes(jwtKey)),
+            ClockSkew = TimeSpan.FromMinutes(2),
+        };
+
+        // Admin routes are Authorization-header bearer tokens; failures must be
+        // RFC 9457 JSON (401/403), not the default empty challenge/redirect.
+        options.Events = new Microsoft.AspNetCore.Authentication.JwtBearer.JwtBearerEvents
+        {
+            OnChallenge = context =>
+            {
+                context.HandleResponse();
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                context.Response.ContentType = "application/problem+json";
+                return context.Response.WriteAsJsonAsync(new ProblemDetails
+                {
+                    Status = StatusCodes.Status401Unauthorized,
+                    Title = "Unauthorized",
+                    Detail = "Authentication is required to access this resource.",
+                    Instance = context.Request.Path,
+                    Extensions = { ["traceId"] = context.HttpContext.TraceIdentifier },
+                });
+            },
+            OnForbidden = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/problem+json";
+                return context.Response.WriteAsJsonAsync(new ProblemDetails
+                {
+                    Status = StatusCodes.Status403Forbidden,
+                    Title = "Forbidden",
+                    Detail = "You do not have permission to access this resource.",
+                    Instance = context.Request.Path,
+                    Extensions = { ["traceId"] = context.HttpContext.TraceIdentifier },
+                });
+            },
+        };
+    });
+builder.Services.AddAuthorization();
 
 // Swagger only in Development (never exposed in production).
 if (builder.Environment.IsDevelopment())
@@ -199,6 +291,31 @@ if (builder.Environment.IsDevelopment())
     builder.Services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new() { Title = "Portfolio API", Version = "v1" });
+
+        // Admin CMS (v1): authorize button sends the login bearer token.
+        options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+        {
+            Description = "Admin JWT from POST /api/v1/admin/auth/login. Enter: Bearer {token}",
+            Name = "Authorization",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+            Scheme = "bearer",
+            BearerFormat = "JWT",
+        });
+        options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+        {
+            {
+                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                    {
+                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                        Id = "Bearer",
+                    },
+                },
+                []
+            },
+        });
 
         var xml = Path.Combine(AppContext.BaseDirectory, "Portfolio.Api.xml");
         if (File.Exists(xml))
@@ -236,12 +353,36 @@ else
 app.UseCors("portfolio");
 app.UseRateLimiter();
 
+app.UseAuthentication();
+app.UseAuthorization();
+
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/health/ready");
 app.MapControllers();
 
 if (app.Environment.IsDevelopment())
 {
+    // Warn when admin auth falls back to plaintext (no hash configured).
+    var adminHash = app.Configuration.GetValue<string>("Admin:PasswordHash") ?? string.Empty;
+    var adminPassword = app.Configuration.GetValue<string>("Admin:Password") ?? string.Empty;
+    var adminEmail = app.Configuration.GetValue<string>("Admin:Email") ?? string.Empty;
+    if (string.IsNullOrWhiteSpace(adminEmail))
+    {
+        app.Logger.LogWarning("Admin:Email is not configured — admin login will reject every attempt.");
+    }
+
+    if (string.IsNullOrWhiteSpace(adminHash))
+    {
+        app.Logger.LogWarning(
+            "Admin:PasswordHash is not configured — falling back to Admin:Password plaintext comparison. " +
+            "Development only: generate a hash for production (see docs/ADMIN.md).");
+    }
+
+    if (!string.IsNullOrWhiteSpace(adminPassword) && !app.Environment.IsDevelopment())
+    {
+        app.Logger.LogWarning("Admin:Password plaintext is set in a non-Development environment — prefer Admin:PasswordHash.");
+    }
+
     // First run: apply pending migrations, then seed real content (idempotent).
     await app.Services.MigrateAndSeedAsync();
 
