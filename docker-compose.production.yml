@@ -1,0 +1,71 @@
+# Production stack: Portfolio.Api + Angular SSR + PostgreSQL/pgvector.
+# All secrets come from `.env.production` (see .env.production.example) —
+# nothing secret is committed to the repository.
+#
+#   cp .env.production.example .env.production   # fill in real values
+#   docker compose -f docker-compose.production.yml --env-file .env.production up -d --build
+#
+# For managed Postgres (Supabase/Neon/Render): set ConnectionStrings__PortfolioDb
+# to the provider's connection string and run with --profile "" disabled... i.e.:
+#   docker compose -f docker-compose.production.yml --env-file .env.production up -d --build api web
+# (the `db` service is skipped; migrations still run via Database__MigrateOnStartup).
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-portfolio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env.production}
+      POSTGRES_DB: ${POSTGRES_DB:-portfolio}
+    volumes:
+      - portfolio-prod-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portfolio} -d ${POSTGRES_DB:-portfolio}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - portfolio-prod
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/src/Portfolio.Api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__PortfolioDb: ${ConnectionStrings__PortfolioDb:?Set ConnectionStrings__PortfolioDb in .env.production}
+      Cors__AllowedOrigins__0: ${Cors__AllowedOrigins__0:?Set Cors__AllowedOrigins__0 in .env.production}
+      Ai__OpenAi__ApiKey: ${Ai__OpenAi__ApiKey:-}
+      Database__MigrateOnStartup: ${Database__MigrateOnStartup:-false}
+      Database__SeedOnStartup: ${Database__SeedOnStartup:-false}
+    ports:
+      - "${API_HOST_PORT:-8080}:8080"
+    networks:
+      - portfolio-prod
+
+  web:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL:?Set API_BASE_URL in .env.production}
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      PORT: ${FRONTEND_PORT:-4000}
+    ports:
+      - "${FRONTEND_HOST_PORT:-4000}:4000"
+    networks:
+      - portfolio-prod
+
+volumes:
+  portfolio-prod-data:
+
+networks:
+  portfolio-prod:

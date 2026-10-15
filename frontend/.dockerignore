@@ -1,0 +1,10 @@
+# Keep the SSR image lean: skip local build output, deps and editor state.
+# (node_modules is reinstalled reproducibly via npm ci in the build stage.)
+node_modules/
+dist/
+.angular/
+coverage/
+.env
+.env.production
+npm-debug.log
+.vscode/

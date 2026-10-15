@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Domain stays free of other layers. The only package reference is Pgvector
+    (a tiny, dependency-free type shim) so ContentChunk can expose the pgvector
+    `Vector` type used by the EF Core mapping in Infrastructure.
+  -->
+  <ItemGroup>
+    <PackageReference Include="Pgvector" Version="0.3.2" />
+  </ItemGroup>
+
+</Project>

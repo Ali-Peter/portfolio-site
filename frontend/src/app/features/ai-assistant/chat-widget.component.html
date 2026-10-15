@@ -1,0 +1,111 @@
+<div class="ai-assistant">
+  <!-- Header -->
+  <div class="ai-assistant__header border-b border-neutral-800/80">
+    <div class="flex items-center gap-3">
+      <span class="ai-assistant__avatar flex h-9 w-9 items-center justify-center rounded-xl bg-amber-400/15 text-sm font-bold text-amber-300">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.75m-4.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.75" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 12h12" />
+        </svg>
+      </span>
+      <div>
+        <p class="ai-assistant__kicker text-[11px] font-semibold uppercase tracking-wider text-amber-400/80">RAG Assistant</p>
+        <h2 class="ai-assistant__title text-lg font-display font-semibold text-white">Ask about my work</h2>
+        <p class="ai-assistant__subtitle text-xs leading-relaxed text-neutral-400">
+          Retrieval-augmented answers over this portfolio. Ask about projects, skills, experience or blog posts.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="ai-assistant__input">
+    <div class="flex gap-3">
+      <input
+        [disabled]="status() === 'loading'"
+        [(ngModel)]="question"
+        (keydown.enter)="submit()"
+        placeholder="Ask about my portfolio… e.g. What projects use ASP.NET?"
+        class="ai-assistant__input-field flex-1 rounded-xl border border-neutral-800 bg-neutral-900/70 px-4 py-3 text-sm text-neutral-200 placeholder:text-neutral-500 transition focus:border-amber-400/60 focus:outline-none focus:ring-2 focus:ring-amber-400/10 disabled:opacity-60"
+        aria-label="Ask a question about the portfolio"
+      />
+      <button
+        (click)="submit()"
+        [disabled]="!question.trim() || status() === 'loading'"
+        class="ai-assistant__send-btn btn btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+        aria-label="Send question"
+      >
+        @if (status() === 'loading') {
+          <span class="ai-assistant__spinner" aria-hidden="true"></span>
+        } @else {
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+          </svg>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <div class="ai-assistant__flow">
+    <!-- Sources / grounding chips -->
+    @if (sources().length > 0 && status() !== 'loading') {
+      <div class="ai-assistant__sources" role="list" aria-label="Retrieved sources">
+        @for (source of sources(); track source.slug ?? source.title) {
+          <a
+            [attr.href]="source.slug ? resourceUrl(source) : '#'"
+            [attr.target]="source.slug ? '_blank' : undefined"
+            [attr.rel]="source.slug ? 'noopener noreferrer' : undefined"
+            class="ai-assistant__source flex items-start gap-2 rounded-lg border border-neutral-800 bg-neutral-900/40 px-3 py-2 text-xs text-neutral-400 transition hover:border-amber-400/30 hover:text-neutral-300"
+            role="listitem"
+          >
+            <span class="ai-assistant__source-icon mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded border border-neutral-700">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 9-3 3m0 0 3 3m-3-3h7.5" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75 6 18m4.5-2.25 3 3m-3-3-3 3m3 3v-7.5M6 18.75V18m0 0 3 0m-3 0 3-3m3 3v-7.5M6 15.75v2.25M18 15.75v2.25m0 0-3 3m3-3-3-3m3 3v-2.25m0 0 3 0m-3 0-3-3" />
+              </svg>
+            </span>
+            <span>{{ source.title }}</span>
+          </a>
+        }
+      </div>
+    }
+
+    <!-- Answer / placeholders -->
+    <div class="ai-assistant__body">
+      @if (status() === 'loading') {
+        <app-loading-state />
+      } @else if (status() === 'error') {
+        <app-error-state
+          [retryable]="true"
+          [retry]="retry"
+        />
+      } @else if (status() === 'empty' && answer() === '') {
+        <app-empty-state />
+      } @else if (answer()) {
+        <div class="ai-assistant__answer prose prose-sm max-w-none text-neutral-300" [innerHTML]="answer() | markdown"></div>
+      } @else {
+        <div class="ai-assistant__placeholder card text-xs leading-relaxed text-neutral-500">
+          Your grounded answers arrive here, with source links. Try asking<br />
+          <em class="text-neutral-400">"What projects use ASP.NET?"</em> or<br />
+          <em class="text-neutral-400">"Tell me about Outbound AI"</em>
+        </div>
+      }
+    </div>
+
+    <!-- Stop button (only while streaming) -->
+    @if (canStop) {
+      <button
+        (click)="stop()"
+        class="ai-assistant__stop btn btn-ghost btn-sm"
+        aria-label="Stop generating"
+      >
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m13.5 4.5 6 6m0 0-6 6m6-6-6 6" />
+        </svg>
+        Stop
+      </button>
+    }
+  </div>
+</div>

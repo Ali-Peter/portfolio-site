@@ -1,0 +1,11 @@
+# Keep the API image lean and secret-free: never send local tool output,
+// secrets or compose env files into the Docker build context.
+bin/
+obj/
+artifacts/
+TestResults/
+coverage/
+.env
+.env.production
+*.log
+.vs/

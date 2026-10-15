@@ -1,0 +1,188 @@
+@import "tailwindcss";
+
+/*
+ * Dark-first portfolio theme. Design tokens live in @theme (Tailwind v4);
+ * shared component classes live in @layer components so utilities can still
+ * override them per-use. Component-scoped styles stay next to their components.
+ */
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Sora", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-neutral-950 font-sans text-neutral-300 antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5 {
+    @apply font-display;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid #fcd34d;
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    @apply bg-amber-500/30 text-amber-100;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0a0a0a;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #27272a;
+    border-radius: 8px;
+    border: 2px solid #0a0a0a;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3f3f46;
+  }
+}
+
+@layer components {
+  .kicker {
+    @apply text-xs font-semibold uppercase tracking-[0.18em] text-amber-400;
+  }
+
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-amber-400 text-neutral-950 shadow-lg shadow-amber-500/15 hover:bg-amber-300 hover:shadow-amber-500/25;
+  }
+
+  .btn-outline {
+    @apply border border-neutral-700 bg-neutral-900/40 text-neutral-200 hover:border-amber-400/70 hover:bg-neutral-900 hover:text-amber-300;
+  }
+
+  .card {
+    @apply rounded-xl border border-neutral-800 bg-neutral-900/60 shadow-lg shadow-black/20;
+  }
+
+  .card-hover {
+    @apply transition duration-300 hover:-translate-y-1 hover:border-amber-500/40 hover:bg-neutral-900 hover:shadow-xl hover:shadow-black/40;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full border border-neutral-700 bg-neutral-800/60 px-2.5 py-0.5 text-xs tracking-wide text-neutral-300;
+  }
+
+  .chip-accent {
+    @apply border-amber-500/40 bg-amber-500/10 text-amber-300;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-neutral-700 bg-neutral-900 px-3.5 py-2.5 text-sm text-white transition placeholder:text-neutral-500 hover:border-neutral-600 focus:border-amber-400 focus:ring-2 focus:ring-amber-400/15 focus:outline-none;
+  }
+
+  .field-error {
+    @apply mt-1 text-sm text-red-400;
+  }
+
+  /* Shimmering placeholder block used by loading states. */
+  .skeleton {
+    @apply relative overflow-hidden rounded-lg bg-neutral-800/70;
+  }
+
+  .skeleton::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+    animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  }
+
+  /* Long-form article content (sanitized markdown → HTML). */
+  .article-body {
+    @apply space-y-4 leading-relaxed text-neutral-300;
+  }
+
+  .article-body > :first-child {
+    @apply mt-0;
+  }
+
+  .article-body a {
+    @apply text-amber-400 underline decoration-amber-400/40 underline-offset-4 transition hover:text-amber-300;
+  }
+
+  .article-body h2 {
+    @apply mt-10 text-2xl font-semibold text-white;
+  }
+
+  .article-body h3,
+  .article-body h4 {
+    @apply mt-8 text-xl font-semibold text-white;
+  }
+
+  .article-body p {
+    @apply text-base leading-7;
+  }
+
+  .article-body ul {
+    @apply list-disc space-y-2 pl-6 text-[15px] leading-7;
+  }
+
+  .article-body blockquote {
+    @apply border-l-2 border-amber-400/60 pl-4 italic text-neutral-400;
+  }
+
+  .article-body strong {
+    @apply font-semibold text-white;
+  }
+
+  .article-body code {
+    @apply rounded bg-neutral-800 px-1.5 py-0.5 font-mono text-[13px] text-amber-300;
+  }
+}
+
+@keyframes skeleton-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+
+@layer components {
+  .ai-fab {
+    @apply fixed bottom-6 right-6 z-50 flex items-center justify-center rounded-full border border-amber-400/40 bg-amber-400/10 p-3 text-amber-300 transition hover:bg-amber-400/20 hover:text-amber-200 focus-visible:outline-2 focus-visible:outline-amber-400;
+  }
+  .ai-fab svg {
+    @apply h-5 w-5;
+  }
+}
+

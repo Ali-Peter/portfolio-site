@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <!--
+      Explicit EF Core pins: keep the whole EF family on the same servicing train.
+      Without these, consumers of this project resolve EF to the lowest version
+      allowed by the provider (MSB3277 assembly version conflicts).
+    -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.20" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="9.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="9.0.20" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.20" />
+    <!-- PostgreSQL database provider -->
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
+    <!-- snake_case naming convention for PostgreSQL -->
+    <PackageReference Include="EFCore.NamingConventions" Version="9.0.0" />
+    <!-- Compile-time access to IConfiguration for DI registration -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="9.0.20" />
+    <!-- Binding for OpenAiOptions (Ai:OpenAi configuration section) -->
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.20" />
+    <!-- Typed HttpClient registration for the OpenAI provider clients -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.20" />
+    <!-- pgvector support: Vector type mapping for the Npgsql provider -->
+    <PackageReference Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />
+    <!-- EF Core design-time tooling (migrations). Never flows to consumers. -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.20">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Portfolio.Application\Portfolio.Application.csproj" />
+  </ItemGroup>
+
+</Project>
