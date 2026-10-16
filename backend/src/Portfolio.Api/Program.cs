@@ -116,13 +116,19 @@ builder.Services.AddCors(options =>
                 // Fail closed: no origins allowed until the deploy sets them.
                 // WithOrigins() with an empty array would throw at startup,
                 // so short-circuit to a policy that allows nothing.
-                policy.WithMethods("GET", "POST", "OPTIONS");
+                policy.WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS");
                 return;
             }
 
             policy
                 .WithOrigins(corsOrigins)
-                .WithMethods("GET", "POST", "OPTIONS")
+                // Admin CMS mutations use PUT/PATCH/DELETE in addition to the
+                // public GET/POST surface; OPTIONS is listed explicitly per
+                // preflight requirements.
+                .WithMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+                // Request headers the clients actually send: JSON bodies
+                // (Content-Type) and the JWT bearer attached by the Angular
+                // auth interceptor. Nothing else is accepted.
                 .WithHeaders("Content-Type", "Authorization")
                 .SetPreflightMaxAge(TimeSpan.FromHours(1));
         });
