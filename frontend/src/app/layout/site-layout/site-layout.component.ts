@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, HostListener, signal } from '@angular/core';
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 interface NavLink {
@@ -37,6 +37,23 @@ export class SiteLayoutComponent {
   protected readonly year = new Date().getFullYear();
 
   protected readonly showAiAssistant = signal(false);
+
+  /** True while the small-screen (below `sm`) navigation drawer is open. */
+  protected readonly mobileMenuOpen = signal(false);
+
+  protected toggleMobileMenu(): void {
+    this.mobileMenuOpen.update((open) => !open);
+  }
+
+  protected closeMobileMenu(): void {
+    this.mobileMenuOpen.set(false);
+  }
+
+  /** Escape closes the mobile drawer (keyboard users). */
+  @HostListener('document:keydown.escape')
+  protected onEscape(): void {
+    this.closeMobileMenu();
+  }
 
   protected trackByPath(_index: number, link: NavLink): string {
     return link.path;

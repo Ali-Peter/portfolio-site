@@ -45,25 +45,41 @@ const CATEGORY_LABELS: Record<SkillCategory, string> = {
     ProjectCardComponent,
   ],
   template: `
-    <!-- Hero -->
-    <section class="items-center gap-14 lg:grid lg:grid-cols-[1.6fr_1fr]">
-      <div>
-        <p class="kicker mb-5">Software &amp; AI Engineer</p>
+    <!-- Hero: portrait stacks first on mobile (image → name → intro → CTAs);
+         explicit placement keeps copy left / portrait right on the lg grid. -->
+    <section
+      class="flex flex-col items-center gap-10 text-center lg:grid lg:grid-cols-[1.6fr_1fr] lg:gap-14 lg:text-left"
+    >
+      <div class="relative mx-auto w-full max-w-[16rem] sm:max-w-sm lg:col-start-2 lg:row-start-1">
+        <div
+          class="absolute -inset-4 rounded-[2.5rem] bg-linear-to-tr from-amber-500/25 via-transparent to-sky-500/15 blur-2xl"
+          aria-hidden="true"
+        ></div>
+        <div class="relative rounded-[1.75rem] border border-neutral-800 bg-neutral-900/70 p-2 shadow-2xl shadow-black/50">
+          <img
+            src="assets/profile.png"
+            alt="Portrait of Ali Ogochukwu Peter"
+            class="aspect-square w-full rounded-[1.25rem] object-cover"
+          />
+        </div>
+      </div>
+      <div class="w-full lg:col-start-1 lg:row-start-1">
+        <p class="kicker mb-4 lg:mb-5">Software &amp; AI Engineer</p>
         <h1 class="text-4xl font-bold leading-[1.1] tracking-tight text-white text-balance sm:text-5xl">
           Ali Ogochukwu Peter
         </h1>
-        <p class="mt-6 max-w-xl text-lg leading-relaxed text-neutral-400">
+        <p class="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-neutral-400 lg:mx-0">
           I build typed backends with <span class="text-neutral-200">ASP.NET Core</span>,
           modern frontends with <span class="text-neutral-200">Angular</span>, and applied LLM
           systems — all backed by <span class="text-neutral-200">PostgreSQL</span> and automated
           tests.
         </p>
-        <div class="mt-9 flex flex-wrap gap-3">
+        <div class="mt-8 flex flex-wrap justify-center gap-3 lg:mt-9 lg:justify-start">
           <a routerLink="/projects" class="btn btn-primary">View projects</a>
           <a routerLink="/contact" class="btn btn-outline">Get in touch</a>
           <a routerLink="/ai-assistant" class="btn btn-outline">Ask my AI assistant</a>
         </div>
-        <div class="mt-9 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-neutral-800/80 pt-6 text-sm text-neutral-500">
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-neutral-800/80 pt-6 text-sm text-neutral-500 lg:mt-9 lg:justify-start">
           <a
             href="https://github.com/Ali-Peter"
             target="_blank"
@@ -88,19 +104,6 @@ const CATEGORY_LABELS: Record<SkillCategory, string> = {
           <a href="mailto:aliogochukwu06@gmail.com" class="transition hover:text-amber-300"
             >aliogochukwu06@gmail.com</a
           >
-        </div>
-      </div>
-      <div class="relative mx-auto mt-14 w-full max-w-sm lg:mt-0">
-        <div
-          class="absolute -inset-4 rounded-[2.5rem] bg-linear-to-tr from-amber-500/25 via-transparent to-sky-500/15 blur-2xl"
-          aria-hidden="true"
-        ></div>
-        <div class="relative rounded-[1.75rem] border border-neutral-800 bg-neutral-900/70 p-2 shadow-2xl shadow-black/50">
-          <img
-            src="assets/profile.png"
-            alt="Portrait of Ali Ogochukwu Peter"
-            class="aspect-square w-full rounded-[1.25rem] object-cover"
-          />
         </div>
       </div>
     </section>
